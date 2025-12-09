@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
+import java.io.*;
 import java.util.ArrayList;
 import javax.swing.*;
 import org.jstriker.wordypad.fileaccess.Load;
@@ -31,6 +32,7 @@ public class MainUI extends JFrame implements ActionListener {
   private JTextArea text_area = new JTextArea();
   private Load load_f;
   private Save save_f;
+  public File save_path = null;
   //@SuppressWarnings("unused")
 
   /**
@@ -38,6 +40,60 @@ public class MainUI extends JFrame implements ActionListener {
    * the toolbar, menu bar and editor window and adds them to the frame.
    */
   @SuppressWarnings("unused")
+
+  public File getSavePath() {
+    return save_path;
+  }
+
+  public KeyListener addKeyListener() {
+
+    KeyListener listener = new KeyListener() {
+      @Override
+      public void keyPressed(KeyEvent event) {
+        printEventInfo("Key Pressed", event);
+        int code = event.getKeyCode();
+        if (event.isControlDown()) {
+          switch (code) {
+          case KeyEvent.VK_S:
+            System.out.println("Save");
+            save_f = new Save(frame);
+            File filePath = save_f.initiateSave(text_area.getText(), getSavePath());
+            setSavePath(filePath);
+
+            break;
+          case KeyEvent.VK_O:
+            System.out.println("Open");
+            break;
+          }
+        }
+      }
+      @Override
+      public void keyReleased(KeyEvent event) {
+        printEventInfo("Key Released", event);
+      }
+      @Override
+      public void keyTyped(KeyEvent event) {
+        printEventInfo("Key Typed", event);
+      }
+      private void printEventInfo(String str, KeyEvent e) {
+        // System.out.println(str);
+        // int code = e.getKeyCode();
+        // System.out.println("   Code: " + KeyEvent.getKeyText(code));
+        // System.out.println("   Char: " + e.getKeyChar());
+        // int mods = e.getModifiersEx();
+        // System.out.println("    Mods: " + KeyEvent.getModifiersExText(mods));
+        // System.out.println("    Action? " + e.isActionKey());
+        // if (KeyEvent.getKeyText(code) == "Ctrl") {
+
+        //   System.out.println("YES");
+        // }
+      }
+    };
+
+    return listener;
+  }
+
+  public void setSavePath(File new_path) { this.save_path = new_path; }
 
   @Override
   public void actionPerformed(ActionEvent e) {
@@ -56,8 +112,12 @@ public class MainUI extends JFrame implements ActionListener {
     case "Open":
       try {
         load_f = new Load(frame);
-        String str = load_f.initiateLoad();
-        SwingUtilities.invokeLater(() -> text_area.setText(str));
+        String[] ret = load_f.initiateLoad();
+        if (ret[0] != null && ret[1] != null) {
+          File filePath = new File(ret[1]);
+          setSavePath(filePath);
+          SwingUtilities.invokeLater(() -> text_area.setText(ret[0]));
+        }
 
       } catch (Exception err) {
         System.err.println(err);
@@ -67,8 +127,20 @@ public class MainUI extends JFrame implements ActionListener {
     case "Save":
       try {
         save_f = new Save(frame);
-        save_f.initiateSave(text_area.getText());
-        //SwingUtilities.invokeLater(() -> text_area.setText(str));
+        File filePath = save_f.initiateSave(text_area.getText(), getSavePath());
+        setSavePath(filePath);
+
+      } catch (Exception err) {
+        System.err.println(err);
+      }
+      break;
+
+    case "Save As":
+      try {
+        setSavePath(null);
+        save_f = new Save(frame);
+        File filePath = save_f.initiateSave(text_area.getText(), getSavePath());
+        setSavePath(filePath);
 
       } catch (Exception err) {
         System.err.println(err);
@@ -90,6 +162,7 @@ public class MainUI extends JFrame implements ActionListener {
     menu_bar.add(mBar);
   }
   public MainUI() throws Exception {
+
     frame = this;
     this.setTitle("Wordy");
     this.getContentPane().setBackground(Color.WHITE);
@@ -112,16 +185,20 @@ public class MainUI extends JFrame implements ActionListener {
     createMenu(viewMenuData, menu_bar);
 
     menu_bar.setBackground(Color.LIGHT_GRAY);
-    JScrollPane scrollPane = new JScrollPane(text_area,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    JScrollPane scrollPane =
+        new JScrollPane(text_area, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
+    KeyListener listy = addKeyListener();
+    text_area.addKeyListener(listy);
     this.add(scrollPane, BorderLayout.CENTER);
     this.setJMenuBar(menu_bar);
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     this.setSize(500, 500);
     this.setLocationRelativeTo(null);
     this.setVisible(true);
+    this.setFocusable(true);
+    this.requestFocusInWindow();
 
     // this.setLayout(new BorderLayout());
   }

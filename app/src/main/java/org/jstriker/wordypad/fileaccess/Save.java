@@ -28,19 +28,37 @@ public class Save {
     fileChooser.setFileFilter(filter);
   }
 
-  public void initiateSave(String text) {
-    StringBuilder sb = new StringBuilder();
-    int option = fileChooser.showSaveDialog(frame);
-    if (option == JFileChooser.APPROVE_OPTION) {
-      File file = fileChooser.getSelectedFile();
-      if (!file.getName().contains(".")) {
-        file = new File(file.getAbsolutePath() + ".txt");
+  public File initiateSave(String text, File file) {
+    if (file == null) {
+      int option = fileChooser.showSaveDialog(frame);
+
+      if (option == JFileChooser.APPROVE_OPTION) {
+        file = fileChooser.getSelectedFile();
+
+        if (!file.getName().contains(".")) {
+          file = new File(file.getAbsolutePath() + ".txt");
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+          writer.write(text);
+          System.out.println("File saved successfully!");
+          return file;
+        } catch (IOException e) {
+          e.printStackTrace();
+          return null;
+        }
+      } else {
+        // USER PRESSED CANCEL
+        return null;
       }
+    } else {
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
         writer.write(text);
         System.out.println("File saved successfully!");
+        return file;
       } catch (IOException e) {
         e.printStackTrace();
+        return null;
       }
     }
   }

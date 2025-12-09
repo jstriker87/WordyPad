@@ -27,7 +27,8 @@ public class Load {
     fileChooser.setFileFilter(filter);
   }
 
-  public String initiateLoad() {
+  public String[]initiateLoad() {
+    String[] ret = new String[2]; 
     StringBuilder sb = new StringBuilder();
     int option = fileChooser.showOpenDialog(frame);
     if (option == JFileChooser.APPROVE_OPTION) {
@@ -36,13 +37,15 @@ public class Load {
         while (reader.hasNextLine()) {
           sb.append(reader.nextLine()).append("\n");
         }
-        return sb.toString();
+        ret[0] = sb.toString();
+        ret[1] = file.toString();
+        return  ret;
       } catch (Exception e) {
         System.out.println("An error occurred.");
         e.printStackTrace();
-        return "";
+        return ret;
       }
     }
-    return "";
+    return ret;
   }
 }
