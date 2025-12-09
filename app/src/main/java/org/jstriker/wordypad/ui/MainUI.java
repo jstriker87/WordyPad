@@ -9,6 +9,7 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import javax.swing.*;
 import org.jstriker.wordypad.fileaccess.Load;
+import org.jstriker.wordypad.fileaccess.Save;
 
 /**
  * This class builds the main application window that the program will run in.
@@ -26,8 +27,10 @@ public class MainUI extends JFrame implements ActionListener {
   static JMenuItem new_window, open, save, save_as, page_setup, print, exit,
       undo, cut, copy, paste, delete, find, replace, select_all, font,
       status_bar;
-  static JTextArea text_area;
-  private Load load;
+
+  private JTextArea text_area = new JTextArea();
+  private Load load_f;
+  private Save save_f;
   //@SuppressWarnings("unused")
 
   /**
@@ -38,6 +41,7 @@ public class MainUI extends JFrame implements ActionListener {
 
   @Override
   public void actionPerformed(ActionEvent e) {
+    text_area.add(new JScrollPane());
     String name = e.getActionCommand();
     System.out.println("Menu clicked: " + name);
     switch (name) {
@@ -51,8 +55,20 @@ public class MainUI extends JFrame implements ActionListener {
 
     case "Open":
       try {
-          load = new Load(frame);
-          load.initiateLoad();
+        load_f = new Load(frame);
+        String str = load_f.initiateLoad();
+        SwingUtilities.invokeLater(() -> text_area.setText(str));
+
+      } catch (Exception err) {
+        System.err.println(err);
+      }
+      break;
+
+    case "Save":
+      try {
+        save_f = new Save(frame);
+        save_f.initiateSave(text_area.getText());
+        //SwingUtilities.invokeLater(() -> text_area.setText(str));
 
       } catch (Exception err) {
         System.err.println(err);
@@ -96,13 +112,14 @@ public class MainUI extends JFrame implements ActionListener {
     createMenu(viewMenuData, menu_bar);
 
     menu_bar.setBackground(Color.LIGHT_GRAY);
+    JScrollPane scrollPane = new JScrollPane(text_area,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-    JTextArea text_area = new JTextArea();
-    this.add(text_area, BorderLayout.CENTER);
-
+    this.add(scrollPane, BorderLayout.CENTER);
     this.setJMenuBar(menu_bar);
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    this.setSize(frameWidth, frameHeight);
+    this.setSize(500, 500);
     this.setLocationRelativeTo(null);
     this.setVisible(true);
 
